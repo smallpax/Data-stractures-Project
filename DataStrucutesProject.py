@@ -73,8 +73,9 @@ class HashTable:
 
 class AVLTree:
     class TreeNode:
-        def __init__(self, key):
+        def __init__(self, key, value=None):
             self.key = key
+            self.value = value
             self.left = None
             self.right = None
             self.height = 1
@@ -98,10 +99,8 @@ class AVLTree:
     def _right_rotate(self, y):
         x = y.left
         T2 = x.right
-
         x.right = y
         y.left = T2
-
         self._update_height(y)
         self._update_height(x)
         return x
@@ -109,47 +108,50 @@ class AVLTree:
     def _left_rotate(self, x):
         y = x.right
         T2 = y.left
-
         y.left = x
         x.right = T2
-
         self._update_height(x)
         self._update_height(y)
         return y
 
     # ---- insert ----
-    def _insert(self, node, key):
+    def _insert(self, node, key, value=None):
         if node is None:
-            return AVLTree.Node(key)
+            return AVLTree.TreeNode(key, value)
 
         if key < node.key:
-            node.left = self._insert(node.left, key)
+            node.left = self._insert(node.left, key, value)
         elif key > node.key:
-            node.right = self._insert(node.right, key)
+            node.right = self._insert(node.right, key, value)
         else:
-            return node  # duplicate keys not allowed
+            # duplicate key: update value (common map-like behavior)
+            node.value = value
+            return node
 
         self._update_height(node)
         balance = self._balance_factor(node)
 
-        # balance cases
-        if balance > 1 and key < node.left.key:   # LL
+        # LL
+        if balance > 1 and key < node.left.key:
             return self._right_rotate(node)
-        if balance > 1 and key > node.left.key:   # LR
+        # LR
+        if balance > 1 and key > node.left.key:
             node.left = self._left_rotate(node.left)
             return self._right_rotate(node)
-        if balance < -1 and key > node.right.key: # RR
+        # RR
+        if balance < -1 and key > node.right.key:
             return self._left_rotate(node)
-        if balance < -1 and key < node.right.key: # RL
+        # RL
+        if balance < -1 and key < node.right.key:
             node.right = self._right_rotate(node.right)
             return self._left_rotate(node)
 
         return node
 
-    def insert(self, key):
-        self.root = self._insert(self.root, key)
+    def insert(self, key, value=None):
+        self.root = self._insert(self.root, key, value)
 
-    # ---- delete ----
+    # ---- min / delete ----
     def _min_node(self, node):
         current = node
         while current.left:
@@ -165,26 +167,31 @@ class AVLTree:
         elif key > node.key:
             node.right = self._delete(node.right, key)
         else:
+            # node with 0 or 1 child
             if node.left is None:
                 return node.right
             if node.right is None:
                 return node.left
+            # node with 2 children: get inorder successor
             succ = self._min_node(node.right)
-            node.key = succ.key
+            node.key, node.value = succ.key, succ.value
             node.right = self._delete(node.right, succ.key)
 
         self._update_height(node)
         balance = self._balance_factor(node)
 
-        # balance cases
-        if balance > 1 and self._balance_factor(node.left) >= 0:   # LL
+        # LL
+        if balance > 1 and self._balance_factor(node.left) >= 0:
             return self._right_rotate(node)
-        if balance > 1 and self._balance_factor(node.left) < 0:    # LR
+        # LR
+        if balance > 1 and self._balance_factor(node.left) < 0:
             node.left = self._left_rotate(node.left)
             return self._right_rotate(node)
-        if balance < -1 and self._balance_factor(node.right) <= 0: # RR
+        # RR
+        if balance < -1 and self._balance_factor(node.right) <= 0:
             return self._left_rotate(node)
-        if balance < -1 and self._balance_factor(node.right) > 0:  # RL
+        # RL
+        if balance < -1 and self._balance_factor(node.right) > 0:
             node.right = self._right_rotate(node.right)
             return self._left_rotate(node)
 
@@ -193,7 +200,21 @@ class AVLTree:
     def delete(self, key):
         self.root = self._delete(self.root, key)
 
-    # ---- traversals ----
+    # ---- search ----
+    def _get(self, node, key):
+        while node:
+            if key < node.key:
+                node = node.left
+            elif key > node.key:
+                node = node.right
+            else:
+                return node.value
+        return None
+
+    def get(self, key):
+        return self._get(self.root, key)
+
+    # ---- traversals (keys) ----
     def inorder(self):
         def _in(node):
             if not node: return []
@@ -238,8 +259,8 @@ class Linkedlist:
 class Profile:
     def __init__(self,profileID,name,last_name,email):
         self.profileID = profileID
-        self.name = names
-        self.surname = surname
+        self.name = name
+        self.surname = last_name
         self.email = email
         self.friends = set()
         self.posts = set()
@@ -256,17 +277,72 @@ class Post:
 def quit_program():
     print("Goodbye")
     return False
-    
+
+tree = AVLTree()  
 def create_profile(): # AVL tree
+
+    flag = True
+    while flag:
+        pid=input("Pid: ").strip()
+        if tree.get(pid) != None:
+            print("pid exists , try again")
+        else:
+              flag = False
+      
     firstName = input("Name: ")
     surname = input("surname: ")
-    email = input("Email: ")
-    
-    
-    print("profile created")
+    email = input("Email: ")  
+    p=Profile(pid,firstName,surname,email)
+    tree.insert(pid,p)
+    print(f"profile created {p}")
     
 def present_profile():  # binary search
-    print("here is the profile")
+    flag1 = True
+    while flag1:
+        pid=input("Pid: ").strip()
+        profile= tree.get(pid) 
+        if profile == None:
+            print("user not exist , try again")
+        else:
+              flag1 = False
+              print("here is the profile:")
+              print_profile(profile)
+              
+
+
+
+def print_profile(profile):
+    print("--- Profile Information ---")
+    print(f"ID      : {profile.profileID}")
+    print(f"Name    : {profile.name} {profile.surname}")
+    print(f"Email   : {profile.email}")
+
+    # Friends
+    if profile.friends:
+        print("Friends:")
+        for f in sorted(profile.friends):
+            print(f"  - {f}")
+    else:
+        print("Friends: None")
+
+    # Posts
+    if profile.posts:
+        print("Posts:")
+        for p in sorted(profile.posts):
+            print(f"  - {p}")
+    else:
+        print("Posts: None")
+
+    # Likes
+    if profile.likes:
+        print("Likes:")
+        for l in sorted(profile.likes):
+            print(f"  - {l}")
+    else:
+        print("Likes: None")
+
+    print("----------------------------")
+    
     
 def add_friend(): # AVL tree or hash
     print("friend added")
@@ -300,7 +376,7 @@ def menu():
     return commands
     
 def print_menu(commands):
-    print("\n==========MENU==========")
+    print("\n=========== MENU ===========")
     for key,(option ,_) in commands.items():
         print(f'{key}){option}')
         
