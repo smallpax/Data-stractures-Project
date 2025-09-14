@@ -1,5 +1,4 @@
 # data stracutes calasses
-
 class HashTable:
     class HashNode:
         def __init__(self, key, value):
@@ -17,7 +16,6 @@ class HashTable:
 
     def insert(self, key, value):
         index = self._hash(key)
-
         if self.table[index] is None:
             self.table[index] = HashTable.HashNode(key, value)
             self.size += 1
@@ -42,7 +40,8 @@ class HashTable:
             if current.key == key:
                 return current.value
             current = current.next
-        raise KeyError(key)
+        return 
+    
 
     def remove(self, key):
         index = self._hash(key)
@@ -214,7 +213,7 @@ class AVLTree:
     def get(self, key):
         return self._get(self.root, key)
 
-    # ---- traversals (keys) ----
+    # ---- traversals ----
     def inorder(self):
         def _in(node):
             if not node: return []
@@ -265,12 +264,15 @@ class Profile:
         self.friends = set()
         self.posts = set()
         self.likes = set()
+        
+    def __str__(self):
+        return f"Profile(ID: {self.profileID}, Name: {self.name} Surname: {self.surname}, Email: {self.email})"
              
 class Post:
-    def __init__(self,postID,posterID,post_contant):
-        self.postID = postID
+    def __init__(self,posterID,postID,contant):
         self.posterID = posterID
-        self.post_contant = post_contant
+        self.postID = postID
+        self.post_contant = contant
         self.likersIDs = set()
         
 # main functions
@@ -292,9 +294,9 @@ def create_profile(): # AVL tree
     firstName = input("Name: ")
     surname = input("surname: ")
     email = input("Email: ")  
-    p=Profile(pid,firstName,surname,email)
+    p = Profile(pid,firstName,surname,email)
     tree.insert(pid,p)
-    print(f"profile created {p}")
+    print(f"profile created : {p}")
     
 def present_profile():  # binary search
     flag1 = True
@@ -308,9 +310,71 @@ def present_profile():  # binary search
               print("here is the profile:")
               print_profile(profile)
               
+def add_friend(): # AVL tree or hash
+    print("friend added")
+    
+def find_friend(): # binary search
+    print("the freinds of the user are:")
+    
+post_hash = HashTable(8)
+def create_post(): # hash
+    pid = input("Enter the ProfileID of the user creating the post: ").strip()
+    profile = does_profile_exist(pid)
+    if profile is None:
+        print("profile does not exist, cannot create post")
+        return
+    
+    postID = input("Enter the PostID: ").strip() 
+    if does_post_exist(postID) is not None:
+        print("postID exists, try again")
+        return
+    
+    
+    contant = input("Enter the contance of your post: ")
+    post = Post(pid,postID,contant)
+    post_hash.insert(postID,post)
+    profile.posts.add(postID)
+    print("new post created")
+    
+def present_post(): # find in hash
+    
+    pid = input("ProfileID: ").strip()
+    profile = does_profile_exist(pid)
+    if profile is None:
+        print("profile does not exist , cannot present post")
+        return
+    
+    postID = input("PostID: ").strip()
+    post = does_post_exist(postID)
+    if post is None:
+        print("post does not exist , cannot present post")
+        return  
+    
+    print_post(post)
+    
+    
+    print("here is the post")
+    
+def like_post(): # list
+    print("post liked")
 
-
-
+# utility functions
+def does_profile_exist(pid):
+    while True:
+        profile = tree.get(pid)
+        if profile is not None:
+            return profile
+        else :
+            return 
+        
+def does_post_exist(postID):
+    while True:
+        post = post_hash.search(postID)
+        if post is not None:
+            return post
+        else:
+            return 
+    
 def print_profile(profile):
     print("--- Profile Information ---")
     print(f"ID      : {profile.profileID}")
@@ -341,26 +405,40 @@ def print_profile(profile):
     else:
         print("Likes: None")
 
-    print("----------------------------")
+    print("---------------------------")
     
-    
-def add_friend(): # AVL tree or hash
-    print("friend added")
-    
-def find_friend(): # binary search
-    print("the freinds of the user are:")
-    
-def create_post(): # hash
-    posterID = input = ("Enter your user ID: ")
-    post = input("Enter your post: ")
-    print("new post sent")
-    
-def find_post(): # find in hash
-    print("here is the post")
-    
-def like_post(): # list
-    print("post liked")
+def print_post(post):
+    print("--- Post Information ---")
+    print(f"Post ID      : {post.postID}")
+    print(f"Posted by    : {post.posterID}")
+    print(f"Content      : {post.post_contant}")
 
+    # Likers
+    if post.likersIDs:
+        print("Likers:")
+        for l in sorted(post.likersIDs):
+            print(f"  - {l}")
+    else:
+        print("Likers: None")
+
+    print("------------------------")
+    
+def seed_profiles():
+    names = [
+        "aa", "bb", "cc", "dd", "ee",
+        "ff", "gg", "hh", "ii", "jj",
+        "kk", "ll", "mm", "nn", "oo",
+        "pp", "qq", "rr", "ss", "tt",
+        "uu", "vv", "ww", "xx", "yy"
+    ]
+
+    profiles = []
+    for i, name in enumerate(names, start=1):
+        profiles.append(Profile(str(i), name, name, f"{name}@email.com"))
+
+    for p in profiles:
+        tree.insert(p.profileID, p)
+    
 # menu functions
 def menu():
     commands = {
@@ -370,7 +448,7 @@ def menu():
         "3": ("Add freind to user",add_friend),
         "4": ("Find users friend",find_friend),
         "5": ("Create post",create_post),
-        "6": ("Find users post",find_post),
+        "6": ("Present post",present_post),
         "7": ("like a post",like_post)
     }
     return commands
@@ -395,10 +473,13 @@ def run_menu(commands):
         if res is False:
             break
         
-
 def main():
+    seed_profiles()
+    
     commands = menu()
     run_menu(commands)
+    
+    
 
     
 
