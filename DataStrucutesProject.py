@@ -5,6 +5,8 @@ class HashTable:
             self.key = key
             self.value = value
             self.next = None
+    
+    LOAD_FACTOR = 0.75
 
     def __init__(self, capacity):
         self.capacity = max(1, capacity)
@@ -13,25 +15,26 @@ class HashTable:
 
     def _hash(self, key):
         return hash(key) % self.capacity
-
+# ---- basic operations ----
     def insert(self, key, value):
         index = self._hash(key)
         if self.table[index] is None:
             self.table[index] = HashTable.HashNode(key, value)
             self.size += 1
-            return
-
-        current = self.table[index]
-        while current:
-            if current.key == key:
-                current.value = value
-                return
-            if current.next is None:
-                break
-            current = current.next
-
-        current.next = HashTable.HashNode(key, value)
-        self.size += 1
+        else:
+            current = self.table[index]
+            while True:                   # ← loop style
+                if current.key == key:
+                    current.value = value
+                    return                # updates do not resize
+                if current.next is None:
+                    break
+                current = current.next
+            current.next = HashTable.HashNode(key, value)
+            self.size += 1
+            
+        if self.load_factor() > self.LOAD_FACTOR:
+            self._resize(self.capacity * 2)
 
     def search(self, key):
         index = self._hash(key)
@@ -42,7 +45,6 @@ class HashTable:
             current = current.next
         return 
     
-
     def remove(self, key):
         index = self._hash(key)
         prev = None
@@ -59,17 +61,30 @@ class HashTable:
             prev, current = current, current.next
 
         raise KeyError(key)
-
+# --- utility methods ----
     def __len__(self):
         return self.size
+    
+    def load_factor(self):
+        return self.size / self.capacity
 
-    def __contains__(self, key):
-        try:
-            self.search(key)
-            return True
-        except KeyError:
-            return False
-
+    def _resize(self,new_capacity):
+        old_table = self.table
+        self.table = [None] * new_capacity 
+        self.capacity = new_capacity
+        
+        for head in old_table:
+            node = head
+            while node:
+                nxt = node.next
+                indx = self._hash(node.key)
+                node.next = self.table[indx]
+                self.table[indx] =node
+                node = nxt
+            
+                
+                
+    
 class AVLTree:
     class TreeNode:
         def __init__(self, key, value=None):
@@ -472,7 +487,7 @@ def run_menu(commands):
         
         if res is False:
             break
-        
+        print(post_hash.__len__())
 def main():
     seed_profiles()
     
