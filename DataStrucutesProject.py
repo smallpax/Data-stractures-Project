@@ -290,6 +290,7 @@ class Post:
         self.postID = postID
         self.post_contant = contant
         self.likersIDs = set()
+        self.likers_order = []
         
 # main functions
 def quit_program():
